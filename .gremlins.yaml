@@ -1,0 +1,23 @@
+mutants:
+  arithmetic_base:
+    enabled: true
+  conditionals_boundary:
+    enabled: true
+  conditionals_negation:
+    enabled: true
+  increment_decrement:
+    enabled: true
+  invert_assignments:
+    enabled: false
+  invert_bitwise:
+    enabled: false
+  invert_bitwise_assignments:
+    enabled: false
+  invert_logical:
+    enabled: false
+  invert_loopctrl:
+    enabled: false
+  invert_negatives:
+    enabled: true
+  remove_self_assignments:
+    enabled: false
