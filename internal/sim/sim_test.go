@@ -187,6 +187,38 @@ func sweeper(name string) Strategy {
 	}}
 }
 
+func TestSnapshotWorldForksIndependently(t *testing.T) {
+	src := NewWorld(MatchConfig{
+		Width: 6, Height: 6, Seed: 1, Params: exactParams(),
+		Entrants: []Entrant{
+			{Strategy: noopStrategy("A"), Spawn: Point{1, 1}},
+			{Strategy: noopStrategy("B"), Spawn: Point{4, 4}},
+		},
+	})
+	cells := make([]Cell, 6*6)
+	for y := range 6 {
+		for x := range 6 {
+			cells[y*6+x] = src.board.At(Point{x, y})
+		}
+	}
+	snap := NewSnapshotWorld(SnapshotConfig{
+		Width: 6, Height: 6, Cells: cells, Params: exactParams(), Seed: 1,
+		Policies: map[FactionID]Strategy{1: noopStrategy("A"), 2: noopStrategy("B")},
+	})
+
+	if snap.Territory(1) != src.Territory(1) || snap.Territory(2) != src.Territory(2) {
+		t.Fatalf("snapshot territory %d/%d, want %d/%d",
+			snap.Territory(1), snap.Territory(2), src.Territory(1), src.Territory(2))
+	}
+	if snap.board.At(Point{1, 1}).Strength != src.board.At(Point{1, 1}).Strength {
+		t.Fatal("snapshot did not preserve cell strength")
+	}
+	snap.setStrength(Point{1, 1}, 99)
+	if src.board.At(Point{1, 1}).Strength == 99 {
+		t.Fatal("snapshot aliased the source board")
+	}
+}
+
 func TestSpreadSpawnsDistinctInBounds(t *testing.T) {
 	pts := SpreadSpawns(10, 10, 6)
 	if len(pts) != 6 {

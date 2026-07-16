@@ -14,6 +14,7 @@ type World struct {
 	factions []*faction
 	counts   []int
 	contest  *rand.Rand
+	order    *rand.Rand
 	tick     int
 }
 
@@ -33,6 +34,7 @@ func NewWorld(cfg MatchConfig) *World {
 		params:  cfg.Params,
 		counts:  counts,
 		contest: newStream(cfg.Seed, contestStream),
+		order:   newStream(cfg.Seed, orderStream),
 	}
 	for i, e := range cfg.Entrants {
 		id := FactionID(i + 1)
@@ -48,7 +50,9 @@ func NewWorld(cfg MatchConfig) *World {
 
 func (w *World) Tick() {
 	w.applyIncome()
-	for _, f := range w.factions {
+	// Shuffle move order each tick so no faction has a fixed first-mover edge.
+	for _, i := range w.order.Perm(len(w.factions)) {
+		f := w.factions[i]
 		if w.counts[f.id] == 0 {
 			continue
 		}
@@ -84,6 +88,7 @@ func (w *World) viewFor(f *faction) *boardView {
 	return &boardView{
 		board:    w.board,
 		faction:  f.id,
+		params:   w.params,
 		owned:    owned,
 		frontier: w.frontierOf(f.id, owned),
 	}

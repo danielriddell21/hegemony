@@ -20,6 +20,7 @@ type fakeView struct {
 func (v fakeView) Width() int             { return v.w }
 func (v fakeView) Height() int            { return v.h }
 func (v fakeView) Faction() sim.FactionID { return v.faction }
+func (v fakeView) Params() sim.Params     { return sim.DefaultParams() }
 func (v fakeView) Owned() []sim.Point     { return v.owned }
 func (v fakeView) Frontier() []sim.Point  { return v.frontier }
 
@@ -258,8 +259,8 @@ func TestBlitzkriegConcentratesForce(t *testing.T) {
 
 func TestRegistry(t *testing.T) {
 	names := strategy.Names()
-	if len(names) != 12 {
-		t.Fatalf("Names() = %v, want 12 entries", names)
+	if len(names) != 13 {
+		t.Fatalf("Names() = %v, want 13 entries", names)
 	}
 	if _, ok := strategy.New("greedy"); !ok {
 		t.Error("New is not case-insensitive for \"greedy\"")

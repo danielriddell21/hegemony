@@ -32,13 +32,15 @@ hegemony headless --seeds 50 --width 24 --height 24
 
 ```
 Strategy      Matches   Wins   WinRate  MeanTerritory
-Greedy             50     50    100.0%          60.9%
-Blob               50      0      0.0%          32.7%
-Random             50      0      0.0%           0.8%
+Search             50     34     68.0%          52.1%
+Bulwark            50     16     32.0%          42.8%
+Blitzkrieg         50      0      0.0%           2.9%
+Turtle             50      0      0.0%           1.3%
+...
 ```
 
-Pick specific entrants with `--strategies Greedy,Blob`. Every run is seeded, so
-the same flags always produce the same table.
+Pick specific entrants with `--strategies Search,Bulwark`. Every run is seeded,
+so the same flags always produce the same table.
 
 ### Watch a match (GUI)
 
@@ -81,7 +83,8 @@ enemy into open ground rather than copying any single hand-coded heuristic.
   it attacks. The simulation validates and applies actions — strategies never
   mutate the world directly.
 - Contests (moved strength vs. the defender's, with seeded jitter) are resolved
-  deterministically, so the same seed always replays the same match.
+  deterministically, so the same seed always replays the same match. Faction
+  move order is reshuffled every tick so no one has a fixed first-mover edge.
 - A match ends when a faction controls a threshold share of the map, when only
   one faction remains, or when the tick limit is reached (most territory wins).
 
@@ -120,13 +123,14 @@ strength to move from which owned cells and where. The roster:
 | `Blitzkrieg` | Concentrate a whole spearhead cell into one overwhelming strike and roll it forward. |
 | `Evolved` | A linear blend of the features above whose weights were tuned offline by `hegemony evolve`. |
 | `Lookahead` | Meta-strategy: simulate several strategies' moves one step in a sandbox and play the best-scoring one. |
+| `Search` | Forks the live position into a forward model, projects each candidate strategy several ticks ahead, and commits to the one that ends up holding the most map. |
 
-The strategies are strongly non-transitive — which one controls the most map
-depends on the field, the board, and the rules. Under the default (defensive)
-economy, fortifying strategies like `Bulwark` and `Turtle` rise while thin
-expanders get rolled back; dial `--max-strength` down and `Blitzkrieg`'s spears
-start cracking the walls. There is no single best strategy, which is the whole
-point — the flags let you find the meta you want.
+Which one controls the most map depends on the field, the board, and the rules.
+Under the default (defensive) economy the forward-model `Search` edges out the
+fortifying `Bulwark`, while thin expanders get rolled back; dial `--max-strength`
+down and `Blitzkrieg`'s spears start cracking the walls. The roster is strongly
+non-transitive — no single strategy dominates every setting, which is the whole
+point — and the flags let you find the meta you want.
 
 New strategies register in `internal/strategy` and are picked up by both the
 tournament and the GUI automatically.
