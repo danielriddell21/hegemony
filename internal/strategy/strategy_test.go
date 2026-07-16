@@ -59,27 +59,75 @@ func mixedFrontier() fakeView {
 	}
 }
 
-func TestStrategiesRespectBudgetAndFrontier(t *testing.T) {
+func allStrategies(t *testing.T) []sim.Strategy {
+	t.Helper()
+	names := strategy.Names()
+	out := make([]sim.Strategy, 0, len(names))
+	for _, name := range names {
+		s, ok := strategy.New(name)
+		if !ok {
+			t.Fatalf("registry advertises %q but New rejects it", name)
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+func TestStrategiesProduceLegalActions(t *testing.T) {
 	rng := rand.New(rand.NewPCG(1, 2))
-	for _, s := range []sim.Strategy{strategy.Random(), strategy.Greedy(), strategy.Blob()} {
+	for _, s := range allStrategies(t) {
 		v := mixedFrontier()
 		front := frontierSet(v)
+		owned := pointSet(v.owned)
 		spent := 0
 		for _, a := range s.Move(v, rng) {
 			if a.Amount <= 0 {
 				t.Errorf("%s: non-positive amount %d", s.Name(), a.Amount)
 			}
-			if _, ok := front[a.Cell]; !ok {
-				t.Errorf("%s: action targets non-frontier cell %v", s.Name(), a.Cell)
-			}
-			if want := kindFor(v.At(a.Cell).Owner); a.Kind != want {
-				t.Errorf("%s: kind = %v for owner %d, want %v", s.Name(), a.Kind, v.At(a.Cell).Owner, want)
+			if a.Kind == sim.Reinforce {
+				if _, ok := owned[a.Cell]; !ok {
+					t.Errorf("%s: reinforce targets non-owned cell %v", s.Name(), a.Cell)
+				}
+			} else {
+				if _, ok := front[a.Cell]; !ok {
+					t.Errorf("%s: %v targets non-frontier cell %v", s.Name(), a.Kind, a.Cell)
+				}
+				if want := kindFor(v.At(a.Cell).Owner); a.Kind != want {
+					t.Errorf("%s: kind = %v for owner %d, want %v", s.Name(), a.Kind, v.At(a.Cell).Owner, want)
+				}
 			}
 			spent += a.Amount
 		}
 		if spent > v.budget {
 			t.Errorf("%s: spent %d over budget %d", s.Name(), spent, v.budget)
 		}
+	}
+}
+
+func TestBulwarkFortifiesContestedBorder(t *testing.T) {
+	// An owned cell adjacent to an enemy should draw a Reinforce; the quiet
+	// owned cell should not.
+	v := fakeView{
+		w: 6, h: 3, faction: 1, budget: 60,
+		cells: map[sim.Point]sim.Cell{
+			{X: 2, Y: 1}: {Owner: 1, Strength: 5},
+			{X: 4, Y: 1}: {Owner: 1, Strength: 5},
+			{X: 5, Y: 1}: {Owner: 2, Strength: 9},
+		},
+		owned:    []sim.Point{{X: 2, Y: 1}, {X: 4, Y: 1}},
+		frontier: []sim.Point{{X: 3, Y: 1}},
+	}
+	reinforced := make(map[sim.Point]bool)
+	for _, a := range strategy.Bulwark().Move(v, rand.New(rand.NewPCG(1, 1))) {
+		if a.Kind == sim.Reinforce {
+			reinforced[a.Cell] = true
+		}
+	}
+	if !reinforced[sim.Point{X: 4, Y: 1}] {
+		t.Error("expected the enemy-adjacent cell (4,1) to be reinforced")
+	}
+	if reinforced[sim.Point{X: 2, Y: 1}] {
+		t.Error("quiet cell (2,1) should not be reinforced")
 	}
 }
 
@@ -97,7 +145,7 @@ func TestGreedyTargetsWeakestFirst(t *testing.T) {
 func TestEmptyFrontierYieldsNoActions(t *testing.T) {
 	rng := rand.New(rand.NewPCG(1, 1))
 	v := fakeView{w: 4, h: 4, faction: 1, budget: 100, cells: map[sim.Point]sim.Cell{}}
-	for _, s := range []sim.Strategy{strategy.Random(), strategy.Greedy(), strategy.Blob()} {
+	for _, s := range allStrategies(t) {
 		if got := s.Move(v, rng); len(got) != 0 {
 			t.Errorf("%s: got %d actions on empty frontier, want 0", s.Name(), len(got))
 		}
@@ -106,11 +154,14 @@ func TestEmptyFrontierYieldsNoActions(t *testing.T) {
 
 func TestRegistry(t *testing.T) {
 	names := strategy.Names()
-	if len(names) != 3 {
-		t.Fatalf("Names() = %v, want 3 entries", names)
+	if len(names) != 6 {
+		t.Fatalf("Names() = %v, want 6 entries", names)
 	}
 	if _, ok := strategy.New("greedy"); !ok {
 		t.Error("New is not case-insensitive for \"greedy\"")
+	}
+	if _, ok := strategy.New("influence"); !ok {
+		t.Error("New does not resolve \"influence\"")
 	}
 	if _, ok := strategy.New("nope"); ok {
 		t.Error("New(\"nope\") returned ok, want false")
@@ -118,8 +169,12 @@ func TestRegistry(t *testing.T) {
 }
 
 func frontierSet(v fakeView) map[sim.Point]struct{} {
-	out := make(map[sim.Point]struct{}, len(v.frontier))
-	for _, p := range v.frontier {
+	return pointSet(v.frontier)
+}
+
+func pointSet(pts []sim.Point) map[sim.Point]struct{} {
+	out := make(map[sim.Point]struct{}, len(pts))
+	for _, p := range pts {
 		out[p] = struct{}{}
 	}
 	return out

@@ -15,6 +15,9 @@ var registry = []entry{
 	{name: "Random", make: Random},
 	{name: "Greedy", make: Greedy},
 	{name: "Blob", make: Blob},
+	{name: "Frontier", make: Frontier},
+	{name: "Influence", make: Influence},
+	{name: "Bulwark", make: Bulwark},
 }
 
 func Names() []string {

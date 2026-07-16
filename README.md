@@ -77,13 +77,20 @@ type Strategy interface {
 ```
 
 `View` is a read-only snapshot of the board — ownership, cell strength, and the
-acting faction's owned cells, frontier, and budget. The starter roster:
+acting faction's owned cells, frontier, and budget. The roster:
 
 | Strategy | Idea |
 | --- | --- |
 | `Random` | Spend the budget on random frontier cells in random amounts. |
 | `Greedy` | Grab the weakest adjacent cells first, capturing as many as the budget allows. |
-| `Blob`   | Flood outward, pushing on the whole frontier at once. |
+| `Blob` | Flood outward, pushing on the whole frontier at once. |
+| `Frontier` | Expand toward open ground — weight each capture by open space unlocked ÷ cost. |
+| `Influence` | Capture where your local presence dominates the enemy's, avoiding overextension. |
+| `Bulwark` | Expand, then fortify only the cells that touch an enemy, denying cheap counter-captures. |
+
+The strategies are non-transitive: `Frontier` beats `Greedy` almost every time
+head-to-head, yet `Greedy` wins the crowded free-for-all — which one controls
+the most map depends on the field.
 
 New strategies register in `internal/strategy` and are picked up by both the
 tournament and the GUI automatically.
