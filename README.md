@@ -89,6 +89,7 @@ acting faction's owned cells, frontier, and budget. The roster:
 | `Bulwark` | Expand, then fortify only the cells that touch an enemy, denying cheap counter-captures. |
 | `Voronoi` | Claim the hinterland far from any enemy first, locking in the larger region. |
 | `Headhunter` | Drive toward the smallest surviving faction and eat it. |
+| `Lookahead` | Meta-strategy: simulate several strategies' moves one step in a sandbox and play the best-scoring one. |
 
 The strategies are strongly non-transitive — which one controls the most map
 depends on the field and the board. `Frontier` beats `Greedy` almost every time

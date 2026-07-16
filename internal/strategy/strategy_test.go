@@ -2,6 +2,7 @@ package strategy_test
 
 import (
 	"math/rand/v2"
+	"reflect"
 	"testing"
 
 	"github.com/danielriddell21/hegemony/internal/sim"
@@ -104,6 +105,28 @@ func TestStrategiesProduceLegalActions(t *testing.T) {
 	}
 }
 
+func TestLookaheadPlaysAPanelPlan(t *testing.T) {
+	rng := rand.New(rand.NewPCG(1, 1))
+	v := mixedFrontier()
+	got := strategy.Lookahead().Move(v, rng)
+	if len(got) == 0 {
+		t.Fatal("lookahead returned no actions on a non-empty frontier")
+	}
+	panel := [][]sim.Action{
+		strategy.Greedy().Move(mixedFrontier(), rng),
+		strategy.Blob().Move(mixedFrontier(), rng),
+		strategy.Frontier().Move(mixedFrontier(), rng),
+		strategy.Influence().Move(mixedFrontier(), rng),
+		strategy.Voronoi().Move(mixedFrontier(), rng),
+	}
+	for _, plan := range panel {
+		if reflect.DeepEqual(got, plan) {
+			return
+		}
+	}
+	t.Errorf("lookahead played a plan none of its panel produced: %+v", got)
+}
+
 func TestHeadhunterAdvancesOnWeakestFaction(t *testing.T) {
 	// Faction 2 is smaller than faction 3, so headhunter should push toward
 	// faction 2 — the frontier cell nearest its cell (3,1) goes first.
@@ -199,8 +222,8 @@ func TestEmptyFrontierYieldsNoActions(t *testing.T) {
 
 func TestRegistry(t *testing.T) {
 	names := strategy.Names()
-	if len(names) != 8 {
-		t.Fatalf("Names() = %v, want 8 entries", names)
+	if len(names) != 9 {
+		t.Fatalf("Names() = %v, want 9 entries", names)
 	}
 	if _, ok := strategy.New("greedy"); !ok {
 		t.Error("New is not case-insensitive for \"greedy\"")
