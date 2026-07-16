@@ -258,8 +258,8 @@ func TestBlitzkriegConcentratesForce(t *testing.T) {
 
 func TestRegistry(t *testing.T) {
 	names := strategy.Names()
-	if len(names) != 11 {
-		t.Fatalf("Names() = %v, want 11 entries", names)
+	if len(names) != 12 {
+		t.Fatalf("Names() = %v, want 12 entries", names)
 	}
 	if _, ok := strategy.New("greedy"); !ok {
 		t.Error("New is not case-insensitive for \"greedy\"")

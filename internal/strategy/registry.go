@@ -22,6 +22,7 @@ var registry = []entry{
 	{name: "Headhunter", make: Headhunter},
 	{name: "Turtle", make: Turtle},
 	{name: "Blitzkrieg", make: Blitzkrieg},
+	{name: "Evolved", make: Evolved},
 	{name: "Lookahead", make: Lookahead},
 }
 

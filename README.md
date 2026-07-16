@@ -52,6 +52,23 @@ just gui run --width 32 --height 32 --strategies Greedy,Blob,Random
 Without the `ebiten` build tag the `run` command reports that the GUI is not
 compiled in; the headless simulation needs no GUI.
 
+### Evolve a strategy
+
+The `Evolved` strategy scores frontier cells with a weighted blend of the other
+strategies' features. `hegemony evolve` hill-climbs those weights offline,
+scoring each candidate by the territory it holds in one-on-one duels against a
+panel of opponents, and prints the best vector (paste it into
+`internal/strategy/evolved.go`):
+
+```sh
+hegemony evolve --width 20 --height 20 --seeds 16 --generations 80 --seed 1
+```
+
+Everything is seeded, so the search is reproducible. The baked-in weights make
+`Evolved` competitive with the hand-written expanders one-on-one (46–50% of the
+map against each) — it learned a counter-intuitive policy, pushing *toward* the
+enemy into open ground rather than copying any single hand-coded heuristic.
+
 ## How it works
 
 - The map is a grid of cells; each cell is neutral or owned by one faction and
@@ -101,6 +118,7 @@ strength to move from which owned cells and where. The roster:
 | `Headhunter` | Drive toward the smallest surviving faction and eat it. |
 | `Turtle` | Take only the cheapest ground and pour everything else into an impregnable perimeter. |
 | `Blitzkrieg` | Concentrate a whole spearhead cell into one overwhelming strike and roll it forward. |
+| `Evolved` | A linear blend of the features above whose weights were tuned offline by `hegemony evolve`. |
 | `Lookahead` | Meta-strategy: simulate several strategies' moves one step in a sandbox and play the best-scoring one. |
 
 The strategies are strongly non-transitive — which one controls the most map
