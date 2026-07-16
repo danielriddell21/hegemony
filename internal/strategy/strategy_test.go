@@ -104,6 +104,51 @@ func TestStrategiesProduceLegalActions(t *testing.T) {
 	}
 }
 
+func TestHeadhunterAdvancesOnWeakestFaction(t *testing.T) {
+	// Faction 2 is smaller than faction 3, so headhunter should push toward
+	// faction 2 — the frontier cell nearest its cell (3,1) goes first.
+	v := fakeView{
+		w: 8, h: 3, faction: 1, budget: 200,
+		cells: map[sim.Point]sim.Cell{
+			{X: 1, Y: 1}: {Owner: 1, Strength: 5},
+			{X: 3, Y: 1}: {Owner: 2, Strength: 4},
+			{X: 5, Y: 1}: {Owner: 3, Strength: 4},
+			{X: 6, Y: 1}: {Owner: 3, Strength: 4},
+			{X: 7, Y: 1}: {Owner: 3, Strength: 4},
+		},
+		owned:    []sim.Point{{X: 1, Y: 1}},
+		frontier: []sim.Point{{X: 0, Y: 1}, {X: 2, Y: 1}, {X: 1, Y: 0}, {X: 1, Y: 2}},
+	}
+	actions := strategy.Headhunter().Move(v, rand.New(rand.NewPCG(1, 1)))
+	if len(actions) == 0 {
+		t.Fatal("headhunter returned no actions")
+	}
+	if actions[0].Cell != (sim.Point{X: 2, Y: 1}) {
+		t.Fatalf("first target = %v, want (2,1) advancing toward faction 2", actions[0].Cell)
+	}
+}
+
+func TestVoronoiClaimsAwayFromEnemy(t *testing.T) {
+	// Budget affords one capture; voronoi must not grab the cell nearest the
+	// enemy at (0,1).
+	v := fakeView{
+		w: 5, h: 3, faction: 1, budget: 4,
+		cells: map[sim.Point]sim.Cell{
+			{X: 2, Y: 1}: {Owner: 1, Strength: 5},
+			{X: 0, Y: 1}: {Owner: 2, Strength: 5},
+		},
+		owned:    []sim.Point{{X: 2, Y: 1}},
+		frontier: []sim.Point{{X: 1, Y: 1}, {X: 3, Y: 1}, {X: 2, Y: 0}, {X: 2, Y: 2}},
+	}
+	actions := strategy.Voronoi().Move(v, rand.New(rand.NewPCG(1, 1)))
+	if len(actions) != 1 {
+		t.Fatalf("got %d actions, want 1 within budget", len(actions))
+	}
+	if actions[0].Cell == (sim.Point{X: 1, Y: 1}) {
+		t.Error("voronoi grabbed the border cell nearest the enemy first")
+	}
+}
+
 func TestBulwarkFortifiesContestedBorder(t *testing.T) {
 	// An owned cell adjacent to an enemy should draw a Reinforce; the quiet
 	// owned cell should not.
@@ -154,14 +199,14 @@ func TestEmptyFrontierYieldsNoActions(t *testing.T) {
 
 func TestRegistry(t *testing.T) {
 	names := strategy.Names()
-	if len(names) != 6 {
-		t.Fatalf("Names() = %v, want 6 entries", names)
+	if len(names) != 8 {
+		t.Fatalf("Names() = %v, want 8 entries", names)
 	}
 	if _, ok := strategy.New("greedy"); !ok {
 		t.Error("New is not case-insensitive for \"greedy\"")
 	}
-	if _, ok := strategy.New("influence"); !ok {
-		t.Error("New does not resolve \"influence\"")
+	if _, ok := strategy.New("headhunter"); !ok {
+		t.Error("New does not resolve \"headhunter\"")
 	}
 	if _, ok := strategy.New("nope"); ok {
 		t.Error("New(\"nope\") returned ok, want false")

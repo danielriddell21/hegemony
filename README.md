@@ -87,10 +87,14 @@ acting faction's owned cells, frontier, and budget. The roster:
 | `Frontier` | Expand toward open ground — weight each capture by open space unlocked ÷ cost. |
 | `Influence` | Capture where your local presence dominates the enemy's, avoiding overextension. |
 | `Bulwark` | Expand, then fortify only the cells that touch an enemy, denying cheap counter-captures. |
+| `Voronoi` | Claim the hinterland far from any enemy first, locking in the larger region. |
+| `Headhunter` | Drive toward the smallest surviving faction and eat it. |
 
-The strategies are non-transitive: `Frontier` beats `Greedy` almost every time
-head-to-head, yet `Greedy` wins the crowded free-for-all — which one controls
-the most map depends on the field.
+The strategies are strongly non-transitive — which one controls the most map
+depends on the field and the board. `Frontier` beats `Greedy` almost every time
+head-to-head; `Greedy` takes the medium free-for-all; `Blob`'s flood wins big
+crowded boards; `Headhunter` shines in small mixed fields. There is no single
+best strategy, which is the whole point.
 
 New strategies register in `internal/strategy` and are picked up by both the
 tournament and the GUI automatically.
