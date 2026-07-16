@@ -43,6 +43,15 @@ func weakestEnemy(counts map[sim.FactionID]int, me sim.FactionID) sim.FactionID 
 	return best
 }
 
+func onFrontier(v sim.View, p sim.Point, me sim.FactionID) bool {
+	for _, q := range v.Neighbors(p) {
+		if v.At(q).Owner != me {
+			return true
+		}
+	}
+	return false
+}
+
 func manhattan(a, b sim.Point) int {
 	return abs(a.X-b.X) + abs(a.Y-b.Y)
 }

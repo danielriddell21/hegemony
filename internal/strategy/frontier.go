@@ -14,7 +14,7 @@ func (frontier) Name() string { return "Frontier" }
 
 func (frontier) Move(v sim.View, _ *rand.Rand) []sim.Action {
 	front := v.Frontier()
-	if v.Budget() <= 0 || len(front) == 0 {
+	if len(front) == 0 {
 		return nil
 	}
 	return captureByScore(v, front, func(p sim.Point) float64 { return roi(v, p) })

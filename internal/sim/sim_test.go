@@ -25,43 +25,71 @@ func exactParams() Params {
 	return p
 }
 
-func TestExpandCapturesNeutral(t *testing.T) {
-	target := Point{3, 2}
-	// Build a world directly for fine-grained control.
+func TestMoveCapturesNeutral(t *testing.T) {
 	w := NewWorld(MatchConfig{
 		Width: 6, Height: 6, Seed: 1, Params: exactParams(),
 		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{2, 2}}},
 	})
 	f := w.factions[0]
-	f.budget = 10
-	w.apply(f, Action{Kind: Expand, Cell: target, Amount: 4})
-	if got := w.board.At(target); got.Owner != f.id {
+	from, to := Point{2, 2}, Point{3, 2}
+	before := w.board.At(from).Strength
+	w.apply(f, Action{From: from, To: to, Amount: 4})
+	if got := w.board.At(to); got.Owner != f.id {
 		t.Fatalf("target owner = %d, want %d", got.Owner, f.id)
 	}
-	if got := w.board.At(target).Strength; got != 1 {
+	if got := w.board.At(to).Strength; got != 1 {
 		t.Fatalf("garrison = %d, want 1 (4-3)", got)
 	}
-	if f.budget != 6 {
-		t.Fatalf("budget = %d, want 6", f.budget)
+	if got := w.board.At(from).Strength; got != before-4 {
+		t.Fatalf("source strength = %d, want %d", got, before-4)
 	}
 	if w.counts[f.id] != 2 {
 		t.Fatalf("territory = %d, want 2", w.counts[f.id])
 	}
 }
 
-func TestExpandNonAdjacentRejected(t *testing.T) {
+func TestMoveToOwnedReinforces(t *testing.T) {
+	w := NewWorld(MatchConfig{
+		Width: 4, Height: 4, Seed: 1, Params: exactParams(),
+		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{1, 1}}},
+	})
+	f := w.factions[0]
+	w.setOwner(Point{1, 2}, f.id, 2)
+	w.apply(f, Action{From: Point{1, 1}, To: Point{1, 2}, Amount: 5})
+	if got := w.board.At(Point{1, 2}).Strength; got != 7 {
+		t.Fatalf("reinforced strength = %d, want 7", got)
+	}
+}
+
+func TestMoveRejectedWhenNotAdjacent(t *testing.T) {
 	w := NewWorld(MatchConfig{
 		Width: 6, Height: 6, Seed: 1, Params: exactParams(),
 		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{2, 2}}},
 	})
 	f := w.factions[0]
-	f.budget = 100
-	w.apply(f, Action{Kind: Expand, Cell: Point{5, 5}, Amount: 50})
+	before := w.board.At(Point{2, 2}).Strength
+	w.apply(f, Action{From: Point{2, 2}, To: Point{5, 5}, Amount: 5})
 	if w.counts[f.id] != 1 {
 		t.Fatalf("territory = %d, want 1 (non-adjacent rejected)", w.counts[f.id])
 	}
-	if f.budget != 100 {
-		t.Fatalf("budget = %d, want 100 (no spend on rejected action)", f.budget)
+	if got := w.board.At(Point{2, 2}).Strength; got != before {
+		t.Fatalf("source strength = %d, want unchanged %d", got, before)
+	}
+}
+
+func TestMoveRejectedWhenOverSourceStrength(t *testing.T) {
+	w := NewWorld(MatchConfig{
+		Width: 4, Height: 4, Seed: 1, Params: exactParams(),
+		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{1, 1}}},
+	})
+	f := w.factions[0]
+	w.setStrength(Point{1, 1}, 3)
+	w.apply(f, Action{From: Point{1, 1}, To: Point{1, 2}, Amount: 10})
+	if got := w.board.At(Point{1, 1}).Strength; got != 3 {
+		t.Fatalf("source strength = %d, want unchanged 3", got)
+	}
+	if w.board.At(Point{1, 2}).Owner != Neutral {
+		t.Fatal("target captured despite insufficient source strength")
 	}
 }
 
@@ -73,30 +101,26 @@ func TestReinforceCapsStrength(t *testing.T) {
 		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{1, 1}}},
 	})
 	f := w.factions[0]
-	f.budget = 100
-	w.apply(f, Action{Kind: Reinforce, Cell: Point{1, 1}, Amount: 50})
-	if got := w.board.At(Point{1, 1}).Strength; got != 25 {
+	w.setStrength(Point{1, 1}, 40)
+	w.setOwner(Point{1, 2}, f.id, 24)
+	w.apply(f, Action{From: Point{1, 1}, To: Point{1, 2}, Amount: 10})
+	if got := w.board.At(Point{1, 2}).Strength; got != 25 {
 		t.Fatalf("strength = %d, want capped at 25", got)
 	}
 }
 
-func TestAttackCapturesEnemy(t *testing.T) {
+func TestIncomeGrowsOwnedCells(t *testing.T) {
 	w := NewWorld(MatchConfig{
-		Width: 6, Height: 1, Seed: 1, Params: exactParams(),
-		Entrants: []Entrant{
-			{Strategy: noopStrategy("A"), Spawn: Point{2, 0}},
-			{Strategy: noopStrategy("B"), Spawn: Point{3, 0}},
-		},
+		Width: 5, Height: 5, Seed: 1, Params: exactParams(),
+		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{2, 2}}},
 	})
-	a := w.factions[0]
-	a.budget = 100
-	// B's spawn has StartStrength 20; attack it with 21 (jitter 0 -> captures).
-	w.apply(a, Action{Kind: Attack, Cell: Point{3, 0}, Amount: 21})
-	if got := w.board.At(Point{3, 0}).Owner; got != a.id {
-		t.Fatalf("captured owner = %d, want %d", got, a.id)
+	before := w.board.At(Point{2, 2}).Strength
+	w.applyIncome()
+	if got := w.board.At(Point{2, 2}).Strength; got != before+1 {
+		t.Fatalf("owned strength after income = %d, want %d", got, before+1)
 	}
-	if w.counts[2] != 0 {
-		t.Fatalf("faction B territory = %d, want 0", w.counts[2])
+	if got := w.board.At(Point{0, 0}).Strength; got != exactParams().NeutralDefense {
+		t.Fatalf("neutral cell grew to %d, want %d", got, exactParams().NeutralDefense)
 	}
 }
 
@@ -105,53 +129,20 @@ func TestResolveContestDeterministicAndExact(t *testing.T) {
 		Width: 2, Height: 2, Seed: 1, Params: exactParams(),
 		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{0, 0}}},
 	})
-	win, rem := w.resolveContest(10, 4)
-	if !win || rem != 6 {
+	if win, rem := w.resolveContest(10, 4); !win || rem != 6 {
 		t.Fatalf("contest(10,4) jitter 0 = (%v,%d), want (true,6)", win, rem)
 	}
-	win, rem = w.resolveContest(3, 4)
-	if win || rem != 1 {
+	if win, rem := w.resolveContest(3, 4); win || rem != 1 {
 		t.Fatalf("contest(3,4) jitter 0 = (%v,%d), want (false,1)", win, rem)
 	}
 }
 
-func TestIncomeGrowsBudget(t *testing.T) {
-	w := NewWorld(MatchConfig{
-		Width: 5, Height: 5, Seed: 1, Params: exactParams(),
-		Entrants: []Entrant{{Strategy: noopStrategy("A"), Spawn: Point{2, 2}}},
-	})
-	w.applyIncome()
-	// base 2 + perCell 1 * 1 owned cell = 3.
-	if got := w.factions[0].budget; got != 3 {
-		t.Fatalf("budget after income = %d, want 3", got)
-	}
-}
-
 func TestLastFactionStandingWins(t *testing.T) {
-	// Faction A expands aggressively; B does nothing and holds one weak cell.
-	grabRight := fixedStrategy{name: "A", move: func(v View) []Action {
-		out := make([]Action, 0, len(v.Frontier()))
-		budget := v.Budget()
-		for _, cell := range v.Frontier() {
-			c := v.At(cell)
-			cost := c.Strength + 1
-			if cost > budget {
-				continue
-			}
-			kind := Expand
-			if c.Owner != Neutral {
-				kind = Attack
-			}
-			out = append(out, Action{Kind: kind, Cell: cell, Amount: cost})
-			budget -= cost
-		}
-		return out
-	}}
 	res := RunMatch(MatchConfig{
 		Width: 5, Height: 5, Seed: 7, MaxTicks: 500, WinThreshold: 0.6,
 		Params: exactParams(),
 		Entrants: []Entrant{
-			{Strategy: grabRight, Spawn: Point{0, 0}},
+			{Strategy: sweeper("A"), Spawn: Point{0, 0}},
 			{Strategy: noopStrategy("B"), Spawn: Point{4, 4}},
 		},
 	})
@@ -165,8 +156,8 @@ func TestRunMatchReproducible(t *testing.T) {
 		Width: 8, Height: 8, Seed: 42, MaxTicks: 200, WinThreshold: 0.6,
 		Params: DefaultParams(),
 		Entrants: []Entrant{
-			{Strategy: randomish("A"), Spawn: Point{1, 1}},
-			{Strategy: randomish("B"), Spawn: Point{6, 6}},
+			{Strategy: sweeper("A"), Spawn: Point{1, 1}},
+			{Strategy: sweeper("B"), Spawn: Point{6, 6}},
 		},
 	}
 	a := RunMatch(cfg)
@@ -176,19 +167,23 @@ func TestRunMatchReproducible(t *testing.T) {
 	}
 }
 
-func randomish(name string) Strategy {
+func sweeper(name string) Strategy {
 	return fixedStrategy{name: name, move: func(v View) []Action {
-		front := v.Frontier()
-		if len(front) == 0 || v.Budget() <= 0 {
-			return nil
+		out := make([]Action, 0)
+		for _, p := range v.Owned() {
+			strength := v.At(p).Strength
+			for _, q := range v.Neighbors(p) {
+				if strength <= 5 {
+					break
+				}
+				if v.At(q).Owner == v.Faction() {
+					continue
+				}
+				out = append(out, Action{From: p, To: q, Amount: 5})
+				strength -= 5
+			}
 		}
-		cell := front[0]
-		c := v.At(cell)
-		kind := Expand
-		if c.Owner != Neutral {
-			kind = Attack
-		}
-		return []Action{{Kind: kind, Cell: cell, Amount: v.Budget()}}
+		return out
 	}}
 }
 

@@ -7,17 +7,24 @@ import (
 	"github.com/danielriddell21/hegemony/internal/sim"
 )
 
-type scoredCell struct {
-	p     sim.Point
-	score float64
+func captureByScore(v sim.View, cells []sim.Point, score func(sim.Point) float64) []sim.Action {
+	pl := newPlan(v)
+	for _, target := range sortedByScore(cells, score) {
+		pl.capture(target)
+	}
+	return pl.result()
 }
 
-func captureByScore(v sim.View, cells []sim.Point, score func(sim.Point) float64) []sim.Action {
-	scored := make([]scoredCell, len(cells))
-	for i, p := range cells {
-		scored[i] = scoredCell{p: p, score: score(p)}
+func sortedByScore(cells []sim.Point, score func(sim.Point) float64) []sim.Point {
+	type scored struct {
+		p     sim.Point
+		score float64
 	}
-	slices.SortFunc(scored, func(a, b scoredCell) int {
+	ranked := make([]scored, len(cells))
+	for i, p := range cells {
+		ranked[i] = scored{p: p, score: score(p)}
+	}
+	slices.SortFunc(ranked, func(a, b scored) int {
 		if c := cmp.Compare(b.score, a.score); c != 0 {
 			return c
 		}
@@ -26,19 +33,15 @@ func captureByScore(v sim.View, cells []sim.Point, score func(sim.Point) float64
 		}
 		return cmp.Compare(a.p.X, b.p.X)
 	})
-
-	budget := v.Budget()
-	actions := make([]sim.Action, 0, len(scored))
-	for _, sc := range scored {
-		c := v.At(sc.p)
-		cost := captureCost(c.Strength)
-		if cost > budget {
-			continue
-		}
-		actions = append(actions, sim.Action{Kind: captureKind(c.Owner), Cell: sc.p, Amount: cost})
-		budget -= cost
+	out := make([]sim.Point, len(ranked))
+	for i, r := range ranked {
+		out[i] = r.p
 	}
-	return actions
+	return out
+}
+
+func captureCost(strength int) int {
+	return strength + strength/4 + 1
 }
 
 func abs(n int) int {

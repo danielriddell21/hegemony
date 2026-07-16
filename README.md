@@ -56,14 +56,23 @@ compiled in; the headless simulation needs no GUI.
 
 - The map is a grid of cells; each cell is neutral or owned by one faction and
   carries a **strength** value.
-- Every tick a faction earns income proportional to its territory and spends it
-  on the **actions** its strategy returns: `Expand` into a neutral cell,
-  `Attack` an enemy cell, or `Reinforce` one of its own. The simulation
-  validates and applies actions — strategies never mutate the world directly.
-- Contests (attacker strength vs. defender, with seeded jitter) are resolved
+- Every tick each owned cell gains income as **strength** (`--income` per cell,
+  capped at `--max-strength`), so a cell's garrison is both its defence and its
+  attacking reserve.
+- An **action** is a troop move: send some strength from an owned cell into an
+  adjacent cell. Into your own cell it reinforces; into a neutral or enemy cell
+  it attacks. The simulation validates and applies actions — strategies never
+  mutate the world directly.
+- Contests (moved strength vs. the defender's, with seeded jitter) are resolved
   deterministically, so the same seed always replays the same match.
 - A match ends when a faction controls a threshold share of the map, when only
   one faction remains, or when the tick limit is reached (most territory wins).
+
+Because strength is the currency for both offence and defence, the rules are
+sharply tunable: `--max-strength`, `--income`, `--neutral-defense`,
+`--start-strength`, and `--jitter` swing the meta between wall-favouring and
+spear-favouring — walls (`Turtle`) beat spears at high `--max-strength`, spears
+(`Blitzkrieg`) break walls when it is low.
 
 ## Strategies
 
@@ -77,25 +86,29 @@ type Strategy interface {
 ```
 
 `View` is a read-only snapshot of the board — ownership, cell strength, and the
-acting faction's owned cells, frontier, and budget. The roster:
+acting faction's owned cells and frontier. Each strategy decides how much
+strength to move from which owned cells and where. The roster:
 
 | Strategy | Idea |
 | --- | --- |
-| `Random` | Spend the budget on random frontier cells in random amounts. |
-| `Greedy` | Grab the weakest adjacent cells first, capturing as many as the budget allows. |
+| `Random` | Push random amounts from random border cells onto random frontier cells. |
+| `Greedy` | Grab the weakest adjacent cells first, capturing as many as strength allows. |
 | `Blob` | Flood outward, pushing on the whole frontier at once. |
 | `Frontier` | Expand toward open ground — weight each capture by open space unlocked ÷ cost. |
 | `Influence` | Capture where your local presence dominates the enemy's, avoiding overextension. |
 | `Bulwark` | Expand, then fortify only the cells that touch an enemy, denying cheap counter-captures. |
 | `Voronoi` | Claim the hinterland far from any enemy first, locking in the larger region. |
 | `Headhunter` | Drive toward the smallest surviving faction and eat it. |
+| `Turtle` | Take only the cheapest ground and pour everything else into an impregnable perimeter. |
+| `Blitzkrieg` | Concentrate a whole spearhead cell into one overwhelming strike and roll it forward. |
 | `Lookahead` | Meta-strategy: simulate several strategies' moves one step in a sandbox and play the best-scoring one. |
 
 The strategies are strongly non-transitive — which one controls the most map
-depends on the field and the board. `Frontier` beats `Greedy` almost every time
-head-to-head; `Greedy` takes the medium free-for-all; `Blob`'s flood wins big
-crowded boards; `Headhunter` shines in small mixed fields. There is no single
-best strategy, which is the whole point.
+depends on the field, the board, and the rules. Under the default (defensive)
+economy, fortifying strategies like `Bulwark` and `Turtle` rise while thin
+expanders get rolled back; dial `--max-strength` down and `Blitzkrieg`'s spears
+start cracking the walls. There is no single best strategy, which is the whole
+point — the flags let you find the meta you want.
 
 New strategies register in `internal/strategy` and are picked up by both the
 tournament and the GUI automatically.

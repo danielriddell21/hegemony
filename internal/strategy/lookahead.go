@@ -22,7 +22,7 @@ func Lookahead() sim.Strategy {
 func (lookahead) Name() string { return "Lookahead" }
 
 func (l lookahead) Move(v sim.View, rng *rand.Rand) []sim.Action {
-	if v.Budget() <= 0 || len(v.Frontier()) == 0 {
+	if len(v.Frontier()) == 0 {
 		return nil
 	}
 
@@ -75,17 +75,22 @@ func newSandbox(v sim.View) *sandbox {
 }
 
 func (sb *sandbox) apply(a sim.Action) {
-	i := a.Cell.Y*sb.w + a.Cell.X
-	if a.Kind == sim.Reinforce {
-		sb.str[i] += a.Amount
+	from := a.From.Y*sb.w + a.From.X
+	to := a.To.Y*sb.w + a.To.X
+	if a.Amount > sb.str[from] {
 		return
 	}
-	if a.Amount > sb.str[i] {
-		sb.owner[i] = sb.me
-		sb.str[i] = max(1, a.Amount-sb.str[i])
+	sb.str[from] -= a.Amount
+	if sb.owner[to] == sb.me {
+		sb.str[to] += a.Amount
 		return
 	}
-	sb.str[i] -= a.Amount
+	if a.Amount > sb.str[to] {
+		sb.owner[to] = sb.me
+		sb.str[to] = max(1, a.Amount-sb.str[to])
+		return
+	}
+	sb.str[to] -= a.Amount
 }
 
 func (sb *sandbox) score() float64 {

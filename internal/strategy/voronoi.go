@@ -14,7 +14,7 @@ func (voronoi) Name() string { return "Voronoi" }
 
 func (voronoi) Move(v sim.View, _ *rand.Rand) []sim.Action {
 	front := v.Frontier()
-	if v.Budget() <= 0 || len(front) == 0 {
+	if len(front) == 0 {
 		return nil
 	}
 

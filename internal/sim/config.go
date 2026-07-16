@@ -1,7 +1,6 @@
 package sim
 
 type Params struct {
-	IncomeBase      int
 	IncomePerCell   int
 	NeutralDefense  int
 	StartStrength   int
@@ -11,10 +10,9 @@ type Params struct {
 
 func DefaultParams() Params {
 	return Params{
-		IncomeBase:      2,
 		IncomePerCell:   1,
 		NeutralDefense:  3,
-		StartStrength:   20,
+		StartStrength:   25,
 		MaxCellStrength: 99,
 		Jitter:          0.25,
 	}

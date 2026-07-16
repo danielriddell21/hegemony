@@ -5,7 +5,6 @@ import "math/rand/v2"
 type faction struct {
 	id       FactionID
 	strategy Strategy
-	budget   int
 	rng      *rand.Rand
 }
 
@@ -62,12 +61,13 @@ func (w *World) Tick() {
 }
 
 func (w *World) applyIncome() {
-	for _, f := range w.factions {
-		t := w.counts[f.id]
-		if t == 0 {
-			continue
+	for y := range w.board.Height {
+		for x := range w.board.Width {
+			p := Point{X: x, Y: y}
+			if c := w.board.At(p); c.Owner != Neutral {
+				w.setStrength(p, c.Strength+w.params.IncomePerCell)
+			}
 		}
-		f.budget += w.params.IncomeBase + w.params.IncomePerCell*t
 	}
 }
 
@@ -84,7 +84,6 @@ func (w *World) viewFor(f *faction) *boardView {
 	return &boardView{
 		board:    w.board,
 		faction:  f.id,
-		budget:   f.budget,
 		owned:    owned,
 		frontier: w.frontierOf(f.id, owned),
 	}
@@ -109,58 +108,30 @@ func (w *World) frontierOf(id FactionID, owned []Point) []Point {
 }
 
 func (w *World) apply(f *faction, a Action) {
-	if a.Amount <= 0 || a.Amount > f.budget || !w.board.InBounds(a.Cell) {
+	if a.Amount <= 0 || !w.board.InBounds(a.From) || !w.board.InBounds(a.To) || !adjacent(a.From, a.To) {
 		return
 	}
-	switch a.Kind {
-	case Reinforce:
-		w.applyReinforce(f, a)
-	case Expand, Attack:
-		w.applyCapture(f, a)
+	src := w.board.At(a.From)
+	if src.Owner != f.id || a.Amount > src.Strength {
+		return
 	}
-}
 
-func (w *World) applyReinforce(f *faction, a Action) {
-	c := w.board.At(a.Cell)
-	if c.Owner != f.id {
+	w.setStrength(a.From, src.Strength-a.Amount)
+	dst := w.board.At(a.To)
+	if dst.Owner == f.id {
+		w.setStrength(a.To, dst.Strength+a.Amount)
 		return
 	}
-	f.budget -= a.Amount
-	w.setStrength(a.Cell, c.Strength+a.Amount)
-}
-
-func (w *World) applyCapture(f *faction, a Action) {
-	c := w.board.At(a.Cell)
-	switch a.Kind {
-	case Expand:
-		if c.Owner != Neutral {
-			return
-		}
-	case Attack:
-		if c.Owner == Neutral || c.Owner == f.id {
-			return
-		}
-	case Reinforce:
-		return
-	}
-	if !w.adjacentTo(a.Cell, f.id) {
-		return
-	}
-	f.budget -= a.Amount
-	if win, remaining := w.resolveContest(a.Amount, c.Strength); win {
-		w.setOwner(a.Cell, f.id, w.capped(remaining))
+	if win, remaining := w.resolveContest(a.Amount, dst.Strength); win {
+		w.setOwner(a.To, f.id, w.capped(remaining))
 	} else {
-		w.board.set(a.Cell, Cell{Owner: c.Owner, Strength: remaining})
+		w.setStrength(a.To, remaining)
 	}
 }
 
-func (w *World) adjacentTo(p Point, id FactionID) bool {
-	for _, q := range w.board.Neighbors(p) {
-		if w.board.At(q).Owner == id {
-			return true
-		}
-	}
-	return false
+func adjacent(a, b Point) bool {
+	dx, dy := a.X-b.X, a.Y-b.Y
+	return dx*dx+dy*dy == 1
 }
 
 func (w *World) resolveContest(atk, def int) (bool, int) {

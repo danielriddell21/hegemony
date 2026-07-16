@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/danielriddell21/hegemony/internal/sim"
 	"github.com/danielriddell21/hegemony/internal/strategy"
 	"github.com/danielriddell21/hegemony/internal/tournament"
 )
@@ -23,27 +22,28 @@ func newHeadlessCmd() *cobra.Command {
 		Use:   "headless",
 		Short: "Run a batch tournament across strategies and print a result table",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			names := strategies
-			if len(names) == 0 {
-				names = strategy.Names()
-			}
-			standings, err := tournament.Run(tournament.Config{
-				Width:        width,
-				Height:       height,
-				Seeds:        seeds,
-				BaseSeed:     baseSeed,
-				MaxTicks:     ticks,
-				WinThreshold: threshold,
-				Params:       sim.DefaultParams(),
-				Strategies:   names,
-			})
-			if err != nil {
-				return fmt.Errorf("run tournament: %w", err)
-			}
-			fmt.Fprint(cmd.OutOrStdout(), tournament.Table(standings))
-			return nil
-		},
+	}
+	params := addParamFlags(cmd)
+	cmd.RunE = func(cmd *cobra.Command, _ []string) error {
+		names := strategies
+		if len(names) == 0 {
+			names = strategy.Names()
+		}
+		standings, err := tournament.Run(tournament.Config{
+			Width:        width,
+			Height:       height,
+			Seeds:        seeds,
+			BaseSeed:     baseSeed,
+			MaxTicks:     ticks,
+			WinThreshold: threshold,
+			Params:       params.params(),
+			Strategies:   names,
+		})
+		if err != nil {
+			return fmt.Errorf("run tournament: %w", err)
+		}
+		fmt.Fprint(cmd.OutOrStdout(), tournament.Table(standings))
+		return nil
 	}
 
 	cmd.Flags().IntVar(&width, "width", 24, "grid width in cells")
