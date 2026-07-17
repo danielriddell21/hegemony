@@ -28,6 +28,7 @@ func newEvolveCmd() *cobra.Command {
 	var (
 		width, height int
 		seeds, ticks  int
+		population    int
 		generations   int
 		threshold     float64
 		baseSeed      uint64
@@ -57,13 +58,14 @@ func newEvolveCmd() *cobra.Command {
 			Threshold:   threshold,
 			Params:      params.params(),
 			Opponents:   resolved,
+			Population:  population,
 			Generations: generations,
 			Seed:        baseSeed,
 		})
 		out := cmd.OutOrStdout()
 		fmt.Fprintf(out, "opponents: %v\n", names)
 		fmt.Fprintf(out, "baseline territory: %.3f\n", res.Baseline)
-		fmt.Fprintf(out, "best territory:     %.3f  (found at generation %d)\n", res.Fitness, res.Generation)
+		fmt.Fprintf(out, "best territory:     %.3f  (after %d generations)\n", res.Fitness, res.Generation)
 		fmt.Fprintf(out, "\nWeights{Weak: %.3f, Open: %.3f, Influence: %.3f, EnemyDist: %.3f, Source: %.3f}\n",
 			res.Weights.Weak, res.Weights.Open, res.Weights.Influence, res.Weights.EnemyDist, res.Weights.Source)
 		return nil
@@ -71,9 +73,10 @@ func newEvolveCmd() *cobra.Command {
 
 	cmd.Flags().IntVar(&width, "width", 24, "grid width in cells")
 	cmd.Flags().IntVar(&height, "height", 24, "grid height in cells")
-	cmd.Flags().IntVar(&seeds, "seeds", 24, "matches per fitness evaluation")
+	cmd.Flags().IntVar(&seeds, "seeds", 16, "duels per opponent per fitness evaluation")
 	cmd.Flags().IntVar(&ticks, "ticks", 400, "maximum ticks per match")
-	cmd.Flags().IntVar(&generations, "generations", 60, "hill-climb generations")
+	cmd.Flags().IntVar(&population, "population", 40, "genetic-algorithm population size")
+	cmd.Flags().IntVar(&generations, "generations", 20, "genetic-algorithm generations")
 	cmd.Flags().Float64Var(&threshold, "threshold", 0, "territory fraction to win outright (0 disables)")
 	cmd.Flags().Uint64Var(&baseSeed, "seed", 1, "evolution seed")
 	cmd.Flags().StringSliceVar(&opponents, "opponents", nil, "strategies to evolve against (default: a fixed panel)")

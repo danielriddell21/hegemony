@@ -13,7 +13,8 @@ func smallConfig() evolve.Config {
 		Width: 12, Height: 12, Seeds: 4, Ticks: 150, Threshold: 0,
 		Params:      sim.DefaultParams(),
 		Opponents:   []sim.Strategy{strategy.Greedy(), strategy.Blob()},
-		Generations: 12,
+		Population:  12,
+		Generations: 8,
 		Seed:        1,
 	}
 }
@@ -25,6 +26,16 @@ func TestRunNeverRegresses(t *testing.T) {
 	}
 	if res.Fitness < 0 || res.Fitness > 1 {
 		t.Errorf("fitness %.4f out of [0,1]", res.Fitness)
+	}
+}
+
+func TestRunDefaultsPopulation(t *testing.T) {
+	cfg := smallConfig()
+	cfg.Population = 0
+	cfg.Generations = 1
+	res := evolve.Run(cfg)
+	if res.Fitness < res.Baseline {
+		t.Errorf("default-population run regressed: fitness %.4f < baseline %.4f", res.Fitness, res.Baseline)
 	}
 }
 

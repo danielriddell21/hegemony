@@ -27,6 +27,27 @@ func TestHeadlessCommandPrintsTable(t *testing.T) {
 	}
 }
 
+func TestEvolveCommandPrintsWeights(t *testing.T) {
+	out, err := runRoot(t, "test", "evolve",
+		"--width", "8", "--height", "8", "--seeds", "1", "--ticks", "40",
+		"--population", "3", "--generations", "1", "--opponents", "Greedy,Blob")
+	if err != nil {
+		t.Fatalf("evolve: %v", err)
+	}
+	if !strings.Contains(out, "Weights{") {
+		t.Errorf("output missing weights vector:\n%s", out)
+	}
+}
+
+func TestEvolveCommandRejectsUnknownOpponent(t *testing.T) {
+	_, err := runRoot(t, "test", "evolve", "--opponents", "Ghost",
+		"--population", "2", "--generations", "1", "--seeds", "1",
+		"--width", "8", "--height", "8", "--ticks", "40")
+	if err == nil {
+		t.Error("expected an error for an unknown opponent strategy")
+	}
+}
+
 func TestVersionFlag(t *testing.T) {
 	out, err := runRoot(t, "1.2.3", "--version")
 	if err != nil {
