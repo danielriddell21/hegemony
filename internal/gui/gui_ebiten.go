@@ -100,8 +100,6 @@ func buildWorld(cfg Config) (*sim.World, error) {
 	}), nil
 }
 
-// mapGame is the leader window: it owns the simulation, draws the war map, and
-// publishes the shared leaderboard state over its Link.
 type mapGame struct {
 	cfg      Config
 	world    *sim.World
@@ -219,8 +217,6 @@ func (g *mapGame) Layout(_, _ int) (int, int) {
 	return g.cfg.Width * g.cfg.CellSize, h
 }
 
-// boardGame is the child window: it renders the leaderboard from state received
-// over its Link and runs no simulation.
 type boardGame struct {
 	cfg     Config
 	palette []color.RGBA

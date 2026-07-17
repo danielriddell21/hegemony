@@ -14,9 +14,6 @@ import (
 
 const eofType = "_eof"
 
-// hub relays state between the leader window and its child windows: it stores
-// the last state and rebroadcasts each message to every participant except the
-// one that sent it. It runs in the leader process.
 type hub struct {
 	self   string
 	inbox  chan srcMsg
@@ -169,9 +166,6 @@ func trySend(ch chan gui.Msg, m gui.Msg) {
 	}
 }
 
-// runLeader runs the war-map window, spawns the leaderboard child, and relays
-// the map's state to it through the hub. Without a GUI it just surfaces the
-// stub error rather than spawning anything.
 func runLeader(cfg gui.Config) error {
 	if !gui.Available() {
 		if err := gui.Run(cfg); err != nil {
@@ -206,8 +200,6 @@ func lead(cfg gui.Config, self string, runWindow func(gui.Config) error) error {
 	return nil
 }
 
-// runChild runs a coordinated child window, reading state from the leader on
-// stdin and publishing its own on stdout as line-delimited JSON.
 func runChild(cfg gui.Config, index int) error {
 	cfg.Role = gui.RoleBoard
 	cfg.OffsetIndex = index
@@ -218,9 +210,6 @@ func runChild(cfg gui.Config, index int) error {
 	return nil
 }
 
-// childLink bridges the leader's line-delimited JSON on r/w to the in/out
-// channels a window reconciles against. Closing In (on stdin EOF) makes the
-// window terminate.
 func childLink(r io.Reader, w io.Writer) *gui.Link {
 	in := make(chan gui.Msg, 64)
 	out := make(chan gui.Msg, 64)
