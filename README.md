@@ -22,7 +22,8 @@ Run a headless tournament across the strategy roster:
 hegemony headless --seeds 50 --width 24 --height 24
 ```
 
-Watch a single match in the GUI (built with `-tags ebiten`):
+Watch a match in the GUI — the war map and leaderboard open as separate,
+coordinated windows (built with `-tags ebiten`):
 
 ```sh
 just gui run --width 32 --height 32
