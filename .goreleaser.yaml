@@ -1,0 +1,96 @@
+version: 2
+
+project_name: hegemony
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  # Headless CLI: CGO-free, cross-compiled to every desktop OS/arch. This is the
+  # default build (Ebiten is behind the `ebiten` tag), so no display libs needed.
+  - id: headless
+    main: ./cmd/hegemony
+    binary: hegemony
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+  # GUI build: the Ebiten window compiled in via the `ebiten` tag. Needs cgo
+  # (Metal / Cocoa), so it is macOS-only and built natively on the macOS runner.
+  - id: gui
+    main: ./cmd/hegemony
+    binary: hegemony
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -tags=ebiten
+    goos: [darwin]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - id: headless
+    ids: [headless]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+  - id: gui
+    ids: [gui]
+    name_template: "{{ .ProjectName }}-gui_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  name_template: "v{{ .Version }}"
+
+# Homebrew formula: the cross-platform headless CLI (macOS + Linux + Windows).
+brews:
+  - name: hegemony
+    ids: [headless]
+    repository:
+      owner: danielriddell21
+      name: homebrew-tap
+      branch: trunk
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/danielriddell21/hegemony
+    description: "A territory-war simulation where competing algorithms fight to control a shared grid."
+    license: MIT
+    commit_msg_template: "Brew formula update for hegemony {{ .Tag }}"
+    install: |
+      bin.install "hegemony"
+    test: |
+      system "#{bin}/hegemony", "--version"
+
+# Homebrew cask: the macOS-only native Ebiten window.
+homebrew_casks:
+  - name: hegemony
+    ids: [gui]
+    repository:
+      owner: danielriddell21
+      name: homebrew-tap
+      branch: trunk
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: https://github.com/danielriddell21/hegemony
+    description: "A territory-war simulation where competing algorithms fight to control a shared grid."
+    license: MIT
+    caveats: "The hegemony board opens an Ebiten window and is macOS-only; on Linux/Windows install the formula and run in the terminal."
