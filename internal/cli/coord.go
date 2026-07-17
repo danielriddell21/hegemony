@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"sync"
@@ -208,10 +209,23 @@ func lead(cfg gui.Config, self string, runWindow func(gui.Config) error) error {
 // runChild runs a coordinated child window, reading state from the leader on
 // stdin and publishing its own on stdout as line-delimited JSON.
 func runChild(cfg gui.Config, index int) error {
+	cfg.Role = gui.RoleBoard
+	cfg.OffsetIndex = index
+	cfg.Link = childLink(os.Stdin, os.Stdout)
+	if err := gui.Run(cfg); err != nil {
+		return fmt.Errorf("run leaderboard: %w", err)
+	}
+	return nil
+}
+
+// childLink bridges the leader's line-delimited JSON on r/w to the in/out
+// channels a window reconciles against. Closing In (on stdin EOF) makes the
+// window terminate.
+func childLink(r io.Reader, w io.Writer) *gui.Link {
 	in := make(chan gui.Msg, 64)
 	out := make(chan gui.Msg, 64)
 	go func() { // leader stdin -> in
-		dec := json.NewDecoder(os.Stdin)
+		dec := json.NewDecoder(r)
 		for {
 			var m gui.Msg
 			if dec.Decode(&m) != nil {
@@ -219,22 +233,15 @@ func runChild(cfg gui.Config, index int) error {
 			}
 			in <- m
 		}
-		close(in) // leader gone: closing In makes the window terminate
+		close(in)
 	}()
 	go func() { // out -> leader via stdout
-		enc := json.NewEncoder(os.Stdout)
+		enc := json.NewEncoder(w)
 		for m := range out {
 			if enc.Encode(m) != nil {
 				break
 			}
 		}
 	}()
-
-	cfg.Role = gui.RoleBoard
-	cfg.OffsetIndex = index
-	cfg.Link = &gui.Link{In: in, Out: out}
-	if err := gui.Run(cfg); err != nil {
-		return fmt.Errorf("run leaderboard: %w", err)
-	}
-	return nil
+	return &gui.Link{In: in, Out: out}
 }

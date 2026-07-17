@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -147,6 +148,8 @@ func TestLeadWiresHubAndChild(t *testing.T) {
 		}
 		if cfg.Link == nil {
 			t.Error("leader got no link")
+		} else {
+			cfg.Link.Out <- gui.Msg{Type: "state", Tick: 1} // exercise the forwarder
 		}
 		return nil
 	}
@@ -155,6 +158,31 @@ func TestLeadWiresHubAndChild(t *testing.T) {
 	}
 	if !ran {
 		t.Error("window runner was never called")
+	}
+}
+
+func TestChildLinkDecodesStdin(t *testing.T) {
+	link := childLink(strings.NewReader(`{"t":"state","tick":9}`+"\n"), io.Discard)
+	select {
+	case m := <-link.In:
+		if m.Tick != 9 {
+			t.Fatalf("decoded tick %d, want 9", m.Tick)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("childLink did not decode stdin")
+	}
+}
+
+func TestChildLinkEncodesStdout(t *testing.T) {
+	pr, pw := io.Pipe()
+	link := childLink(strings.NewReader(""), pw)
+	link.Out <- gui.Msg{Type: "state", Tick: 5}
+	var got gui.Msg
+	if err := json.NewDecoder(pr).Decode(&got); err != nil {
+		t.Fatalf("decode encoded output: %v", err)
+	}
+	if got.Tick != 5 {
+		t.Fatalf("encoded tick %d, want 5", got.Tick)
 	}
 }
 
