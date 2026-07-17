@@ -1,11 +1,20 @@
 package evolve
 
 import (
-	"math/rand/v2"
+	"github.com/danielriddell21/galapagos/pkg/ga"
 
 	"github.com/danielriddell21/hegemony/internal/sim"
 	"github.com/danielriddell21/hegemony/internal/strategy"
 )
+
+const (
+	genomeLen         = 5
+	defaultPopulation = 40
+)
+
+// incumbent is the known-good starting point seeded into the population, so with
+// elitism the search can never return weights worse than it.
+var incumbent = strategy.Weights{Weak: 1, Open: 1, Influence: 0.5, EnemyDist: 0.5, Source: 0.5}
 
 type Config struct {
 	Width       int
@@ -15,6 +24,7 @@ type Config struct {
 	Threshold   float64
 	Params      sim.Params
 	Opponents   []sim.Strategy
+	Population  int
 	Generations int
 	Seed        uint64
 }
@@ -26,34 +36,39 @@ type Result struct {
 	Generation int
 }
 
-// Run hill-climbs a weight vector with annealed Gaussian mutation, scoring each
-// candidate by the mean territory it wins in a free-for-all against Opponents.
+// Run evolves the Evolved strategy's weights with a genetic algorithm
+// (galapagos/pkg/ga), scoring each candidate by the territory it wins in seeded
+// duels against Opponents. The whole run is deterministic from cfg.Seed.
 func Run(cfg Config) Result {
-	rng := rand.New(rand.NewPCG(cfg.Seed, 0x5EED))
-	best := strategy.Weights{Weak: 1, Open: 1, Influence: 0.5, EnemyDist: 0.5, Source: 0.5}
-	baseline := fitness(cfg, best)
-	bestFit := baseline
-	bestGen := 0
-
-	step := 1.0
-	for g := 1; g <= cfg.Generations; g++ {
-		cand := mutate(best, rng, step)
-		if fit := fitness(cfg, cand); fit > bestFit {
-			best, bestFit, bestGen = cand, fit, g
-		}
-		step *= 0.97
+	population := cfg.Population
+	if population <= 0 {
+		population = defaultPopulation
 	}
-	return Result{Weights: best, Fitness: bestFit, Baseline: baseline, Generation: bestGen}
+	baseline := fitness(cfg, incumbent)
+	score := func(g []float64) float64 { return fitness(cfg, weightsOf(g)) }
+
+	res := ga.Run(ga.Config{
+		PopulationSize: population,
+		EliteFraction:  0.1,
+		MutationRate:   0.3,
+		MutationStd:    0.5,
+		Seed:           int64(cfg.Seed),
+	}, genomeLen, cfg.Generations, score, genomeOf(incumbent))
+
+	return Result{
+		Weights:    weightsOf(res.Best),
+		Fitness:    res.Fitness,
+		Baseline:   baseline,
+		Generation: res.Generations,
+	}
 }
 
-func mutate(w strategy.Weights, rng *rand.Rand, step float64) strategy.Weights {
-	return strategy.Weights{
-		Weak:      w.Weak + rng.NormFloat64()*step,
-		Open:      w.Open + rng.NormFloat64()*step,
-		Influence: w.Influence + rng.NormFloat64()*step,
-		EnemyDist: w.EnemyDist + rng.NormFloat64()*step,
-		Source:    w.Source + rng.NormFloat64()*step,
-	}
+func genomeOf(w strategy.Weights) []float64 {
+	return []float64{w.Weak, w.Open, w.Influence, w.EnemyDist, w.Source}
+}
+
+func weightsOf(g []float64) strategy.Weights {
+	return strategy.Weights{Weak: g[0], Open: g[1], Influence: g[2], EnemyDist: g[3], Source: g[4]}
 }
 
 // fitness duels the candidate one-on-one against each opponent over several

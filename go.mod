@@ -3,6 +3,7 @@ module github.com/danielriddell21/hegemony
 go 1.26.3
 
 require (
+	github.com/danielriddell21/galapagos v0.1.1-0.20260717110944-3a454eef729a
 	github.com/hajimehoshi/ebiten/v2 v2.9.9
 	github.com/spf13/cobra v1.10.2
 )

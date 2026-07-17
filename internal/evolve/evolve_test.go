@@ -13,7 +13,8 @@ func smallConfig() evolve.Config {
 		Width: 12, Height: 12, Seeds: 4, Ticks: 150, Threshold: 0,
 		Params:      sim.DefaultParams(),
 		Opponents:   []sim.Strategy{strategy.Greedy(), strategy.Blob()},
-		Generations: 12,
+		Population:  12,
+		Generations: 8,
 		Seed:        1,
 	}
 }
