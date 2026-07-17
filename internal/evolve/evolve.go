@@ -12,8 +12,6 @@ const (
 	defaultPopulation = 40
 )
 
-// incumbent is the known-good starting point seeded into the population, so with
-// elitism the search can never return weights worse than it.
 var incumbent = strategy.Weights{Weak: 1, Open: 1, Influence: 0.5, EnemyDist: 0.5, Source: 0.5}
 
 type Config struct {
@@ -36,9 +34,6 @@ type Result struct {
 	Generation int
 }
 
-// Run evolves the Evolved strategy's weights with a genetic algorithm
-// (galapagos/pkg/ga), scoring each candidate by the territory it wins in seeded
-// duels against Opponents. The whole run is deterministic from cfg.Seed.
 func Run(cfg Config) Result {
 	population := cfg.Population
 	if population <= 0 {
@@ -71,10 +66,6 @@ func weightsOf(g []float64) strategy.Weights {
 	return strategy.Weights{Weak: g[0], Open: g[1], Influence: g[2], EnemyDist: g[3], Source: g[4]}
 }
 
-// fitness duels the candidate one-on-one against each opponent over several
-// seeds and averages the territory share it holds. Duels give a clean gradient:
-// in a crowded free-for-all one strategy tends to snowball and everyone else is
-// eliminated, which flattens the signal to noise.
 func fitness(cfg Config, w strategy.Weights) float64 {
 	me := strategy.Weighted(w)
 	spawns := sim.SpreadSpawns(cfg.Width, cfg.Height, 2)

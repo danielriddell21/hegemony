@@ -47,10 +47,6 @@ func (s search) Move(v sim.View, rng *rand.Rand) []sim.Action {
 	return bestCand.Move(v, rng)
 }
 
-// project forks the position, commits our faction to cand while every opponent
-// plays a fixed policy, rolls the game forward a few ticks, and reports the
-// territory we end up holding — so Search picks the plan that projects best
-// rather than the move that looks best for a single tick.
 func (s search) project(cells []sim.Cell, params sim.Params, me sim.FactionID, w, h int, cand sim.Strategy) int {
 	policies := make(map[sim.FactionID]sim.Strategy)
 	for _, c := range cells {

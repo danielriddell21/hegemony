@@ -2,9 +2,6 @@ package sim
 
 import "slices"
 
-// SnapshotConfig builds a world from an explicit board state rather than fresh
-// spawns, so a strategy can fork the position it sees and roll it forward as a
-// forward model. Policies assigns a strategy to each faction id present.
 type SnapshotConfig struct {
 	Width    int
 	Height   int
