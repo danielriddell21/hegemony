@@ -29,6 +29,16 @@ func TestRunNeverRegresses(t *testing.T) {
 	}
 }
 
+func TestRunDefaultsPopulation(t *testing.T) {
+	cfg := smallConfig()
+	cfg.Population = 0
+	cfg.Generations = 1
+	res := evolve.Run(cfg)
+	if res.Fitness < res.Baseline {
+		t.Errorf("default-population run regressed: fitness %.4f < baseline %.4f", res.Fitness, res.Baseline)
+	}
+}
+
 func TestRunReproducible(t *testing.T) {
 	a := evolve.Run(smallConfig())
 	b := evolve.Run(smallConfig())
