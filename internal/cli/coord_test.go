@@ -111,6 +111,11 @@ func TestHubSpawnChildReapsOnExit(t *testing.T) {
 	// `true` ignores the args and exits 0, so its stdout EOFs immediately and the
 	// child is dropped — exercising spawnChild's pipes, goroutines, and reaping.
 	h := newHub("true")
+	// Prime a last state so the new child is handed a message to encode, covering
+	// the hub->child writer path.
+	h.mu.Lock()
+	h.last = gui.Msg{Type: "state", Tick: 4}
+	h.mu.Unlock()
 	go h.run()
 	h.spawnChild(1)
 
@@ -170,6 +175,38 @@ func TestChildLinkDecodesStdin(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("childLink did not decode stdin")
+	}
+}
+
+type errWriter struct{ wrote chan struct{} }
+
+func (w errWriter) Write([]byte) (int, error) {
+	select {
+	case w.wrote <- struct{}{}:
+	default:
+	}
+	return 0, io.ErrClosedPipe
+}
+
+func TestChildLinkStopsOnWriteError(t *testing.T) {
+	w := errWriter{wrote: make(chan struct{}, 1)}
+	link := childLink(strings.NewReader(""), w)
+	link.Out <- gui.Msg{Type: "state"}
+	select {
+	case <-w.wrote:
+	case <-time.After(time.Second):
+		t.Fatal("childLink never attempted to encode")
+	}
+}
+
+func TestHubSpawnChildStartFailure(t *testing.T) {
+	h := newHub("/nonexistent/hegemony-does-not-exist")
+	h.spawnChild(1)
+	h.mu.Lock()
+	n := len(h.parts)
+	h.mu.Unlock()
+	if n != 0 {
+		t.Fatalf("a child that fails to start added %d participants, want 0", n)
 	}
 }
 
