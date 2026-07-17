@@ -64,3 +64,10 @@ func TestRunWithoutGUIReports(t *testing.T) {
 		t.Error("expected an error from the non-GUI build stub")
 	}
 }
+
+func TestRunChildWindowWithoutGUIReports(t *testing.T) {
+	_, err := runRoot(t, "test", "run", "--child", "1", "--width", "8", "--height", "8")
+	if err == nil {
+		t.Error("expected an error from the non-GUI build stub for the child window")
+	}
+}

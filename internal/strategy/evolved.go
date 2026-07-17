@@ -6,9 +6,6 @@ import (
 	"github.com/danielriddell21/hegemony/internal/sim"
 )
 
-// Weights linearly combine the frontier features the other strategies each key
-// on individually. Tuning them recovers Greedy, Frontier, Influence, Voronoi,
-// or blends in between.
 type Weights struct {
 	Weak      float64
 	Open      float64
@@ -17,10 +14,6 @@ type Weights struct {
 	Source    float64
 }
 
-// evolvedWeights is the best vector found by `hegemony evolve` duelling a panel
-// of expanders (Greedy, Blob, Frontier, Voronoi, Influence). The signs are
-// counter-intuitive: it learned to push toward the enemy (negative EnemyDist)
-// into open ground rather than pick off the nearest weak cell (negative Weak).
 var evolvedWeights = Weights{
 	Weak:      -1.563,
 	Open:      2.744,
