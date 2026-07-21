@@ -1,5 +1,7 @@
 package gui
 
+import "github.com/danielriddell21/crucible/hub"
+
 type Msg struct {
 	Type     string        `json:"t"`
 	Tick     int           `json:"tick,omitempty"`
@@ -14,7 +16,6 @@ type FactionStat struct {
 	Share float64 `json:"share"`
 }
 
-type Link struct {
-	In  <-chan Msg
-	Out chan<- Msg
-}
+// Link is the window's channel pair to the multi-window hub, aliasing the
+// engine's generic hub link specialised to Msg.
+type Link = hub.Link[Msg]
