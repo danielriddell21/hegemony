@@ -17,6 +17,10 @@ func newRunCmd() *cobra.Command {
 		tps           int
 		child         int
 		strategies    []string
+		recPath       string
+		recFPS        int
+		recScale      int
+		recFrames     int
 	)
 
 	cmd := &cobra.Command{
@@ -40,6 +44,13 @@ func newRunCmd() *cobra.Command {
 			Strategies:     names,
 			CellSize:       cellSize,
 			TicksPerSecond: tps,
+			RecordPath:     recPath,
+			RecordFPS:      recFPS,
+			RecordScale:    recScale,
+			RecordFrames:   recFrames,
+		}
+		if cfg.RecordPath != "" {
+			return runRecord(cfg)
 		}
 		if child > 0 {
 			return runChild(cfg, child)
@@ -57,5 +68,9 @@ func newRunCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&strategies, "strategies", nil, "strategies to enter (default: all registered)")
 	cmd.Flags().IntVar(&child, "child", 0, "internal: run as coordinated child window N")
 	_ = cmd.Flags().MarkHidden("child")
+	cmd.Flags().StringVar(&recPath, "record", "", "record the war map to this GIF path, then exit")
+	cmd.Flags().IntVar(&recFPS, "record-fps", 30, "recording frames per second")
+	cmd.Flags().IntVar(&recScale, "record-scale", 1, "downscale factor for the recording")
+	cmd.Flags().IntVar(&recFrames, "record-frames", 600, "frames to capture before exiting")
 	return cmd
 }

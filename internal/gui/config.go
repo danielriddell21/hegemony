@@ -23,4 +23,11 @@ type Config struct {
 	Role        Role
 	OffsetIndex int
 	Link        *Link
+
+	// Recording (matches galapagos): when RecordPath is set the war map runs
+	// standalone, captures frames to a GIF and exits.
+	RecordPath   string
+	RecordFPS    int
+	RecordScale  int
+	RecordFrames int
 }
