@@ -30,6 +30,16 @@ func hubConfig(self string) hub.Config[gui.Msg] {
 	}
 }
 
+// runRecord runs a single standalone war-map window that records itself to a
+// GIF and exits — no hub, no leaderboard child.
+func runRecord(cfg gui.Config) error {
+	cfg.Role = gui.RoleMap
+	if err := gui.Run(cfg); err != nil {
+		return fmt.Errorf("record war map: %w", err)
+	}
+	return nil
+}
+
 func runLeader(cfg gui.Config) error {
 	if !gui.Available() {
 		if err := gui.Run(cfg); err != nil {

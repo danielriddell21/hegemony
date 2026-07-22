@@ -5,12 +5,15 @@ package gui
 import (
 	"errors"
 	"fmt"
+	"image"
 	"image/color"
 	"sort"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+
+	"github.com/danielriddell21/crucible/record"
 
 	"github.com/danielriddell21/hegemony/internal/sim"
 	"github.com/danielriddell21/hegemony/internal/strategy"
@@ -51,6 +54,9 @@ func runMap(cfg Config) error {
 		return err
 	}
 	g := &mapGame{cfg: cfg, world: world, palette: palette(), link: cfg.Link}
+	if cfg.RecordPath != "" {
+		g.rec = record.NewRecorder(cfg.RecordFPS, cfg.RecordScale, cfg.RecordFrames)
+	}
 	if g.link != nil {
 		g.lastSent = g.shared() // suppress an initial publish; the child starts empty and fills in
 	}
@@ -109,9 +115,17 @@ type mapGame struct {
 	winner   sim.FactionID
 	link     *Link
 	lastSent Msg
+	rec      *record.Recorder
+	pix      []byte
 }
 
 func (g *mapGame) Update() error {
+	if g.rec != nil && g.rec.Done() {
+		if err := g.rec.Save(g.cfg.RecordPath); err != nil {
+			return fmt.Errorf("save recording: %w", err)
+		}
+		return ebiten.Termination
+	}
 	if !g.over {
 		g.acc += float64(g.cfg.TicksPerSecond) / float64(ebiten.TPS())
 		for g.acc >= 1 && !g.over {
@@ -196,6 +210,15 @@ func (g *mapGame) Draw(screen *ebiten.Image) {
 			line := fmt.Sprintf("%-10s %5.1f%%", g.world.StrategyName(id), 100*g.world.Shares()[id])
 			ebitenutil.DebugPrintAt(screen, line, 4, g.cfg.Height*g.cfg.CellSize+mapHeaderH+i*hudLineHeight)
 		}
+	}
+
+	if g.rec != nil && !g.rec.Done() {
+		b := screen.Bounds()
+		if g.pix == nil {
+			g.pix = make([]byte, 4*b.Dx()*b.Dy())
+		}
+		screen.ReadPixels(g.pix)
+		g.rec.Add(&image.RGBA{Pix: g.pix, Stride: 4 * b.Dx(), Rect: image.Rect(0, 0, b.Dx(), b.Dy())})
 	}
 }
 
