@@ -1,6 +1,6 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
-github.com/danielriddell21/crucible v0.1.0 h1:BjXelVnkLhkNpSvplMvR4YiwlxuHOu0nfXOfJsGoRzg=
-github.com/danielriddell21/crucible v0.1.0/go.mod h1:k5Lq4KkZKeraMvoP7+OideZIRRdzZBQ73afCfd+E9yk=
+github.com/danielriddell21/crucible v0.2.1-0.20260722103312-6747c76cd0ef h1:hlCtb/1rbGQktmW75oURmf+yn4s6YryV6YYtcEwuTpI=
+github.com/danielriddell21/crucible v0.2.1-0.20260722103312-6747c76cd0ef/go.mod h1:k5Lq4KkZKeraMvoP7+OideZIRRdzZBQ73afCfd+E9yk=
 github.com/danielriddell21/galapagos v0.2.0 h1:X+IwbnvbeK3hDjeLqxBueHWlRRF141/RevIVaQLkQIE=
 github.com/danielriddell21/galapagos v0.2.0/go.mod h1:7Yz3WdQ0NV1PgWw5yC5GYV3DC+IyWM0h4h+rRhuE2/o=
 github.com/danielriddell21/ordinex/v2 v2.0.1 h1:06R1COWpakgZI+GTsqGwgXcKaeXXuK1jlCLg9zkS0KI=
