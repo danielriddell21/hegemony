@@ -54,8 +54,8 @@ func runMap(cfg Config) error {
 		return err
 	}
 	g := &mapGame{cfg: cfg, world: world, palette: palette(), link: cfg.Link}
-	if cfg.RecordPath != "" {
-		g.rec = record.NewRecorder(cfg.RecordFPS, cfg.RecordScale, cfg.RecordFrames)
+	if cfg.Rec.Recording() {
+		g.rec = record.New(cfg.Rec)
 	}
 	if g.link != nil {
 		g.lastSent = g.shared() // suppress an initial publish; the child starts empty and fills in
@@ -121,7 +121,7 @@ type mapGame struct {
 
 func (g *mapGame) Update() error {
 	if g.rec != nil && g.rec.Done() {
-		if err := g.rec.Save(g.cfg.RecordPath); err != nil {
+		if err := g.rec.Save(g.cfg.Rec.Path); err != nil {
 			return fmt.Errorf("save recording: %w", err)
 		}
 		return ebiten.Termination
