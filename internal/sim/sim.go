@@ -1,6 +1,10 @@
 package sim
 
-import "math/rand/v2"
+import (
+	"math/rand/v2"
+
+	"github.com/danielriddell21/crucible/rng"
+)
 
 type faction struct {
 	id       FactionID
@@ -33,15 +37,15 @@ func NewWorld(cfg MatchConfig) *World {
 		board:   board,
 		params:  cfg.Params,
 		counts:  counts,
-		contest: newStream(cfg.Seed, contestStream),
-		order:   newStream(cfg.Seed, orderStream),
+		contest: rng.Stream(cfg.Seed, contestStream),
+		order:   rng.Stream(cfg.Seed, orderStream),
 	}
 	for i, e := range cfg.Entrants {
 		id := FactionID(i + 1)
 		w.factions = append(w.factions, &faction{
 			id:       id,
 			strategy: e.Strategy,
-			rng:      newStream(cfg.Seed, uint64(id)),
+			rng:      rng.Stream(cfg.Seed, uint64(id)),
 		})
 		w.setOwner(e.Spawn, id, cfg.Params.StartStrength)
 	}

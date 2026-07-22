@@ -1,6 +1,10 @@
 package sim
 
-import "slices"
+import (
+	"slices"
+
+	"github.com/danielriddell21/crucible/rng"
+)
 
 type SnapshotConfig struct {
 	Width    int
@@ -38,14 +42,14 @@ func NewSnapshotWorld(cfg SnapshotConfig) *World {
 		board:   board,
 		params:  cfg.Params,
 		counts:  counts,
-		contest: newStream(cfg.Seed, contestStream),
-		order:   newStream(cfg.Seed, orderStream),
+		contest: rng.Stream(cfg.Seed, contestStream),
+		order:   rng.Stream(cfg.Seed, orderStream),
 	}
 	for _, id := range ids {
 		w.factions = append(w.factions, &faction{
 			id:       id,
 			strategy: cfg.Policies[id],
-			rng:      newStream(cfg.Seed, uint64(id)),
+			rng:      rng.Stream(cfg.Seed, uint64(id)),
 		})
 	}
 	return w
