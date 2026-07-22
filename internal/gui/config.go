@@ -1,6 +1,10 @@
 package gui
 
-import "github.com/danielriddell21/hegemony/internal/sim"
+import (
+	"github.com/danielriddell21/crucible/record"
+
+	"github.com/danielriddell21/hegemony/internal/sim"
+)
 
 type Role string
 
@@ -24,10 +28,7 @@ type Config struct {
 	OffsetIndex int
 	Link        *Link
 
-	// Recording (matches galapagos): when RecordPath is set the war map runs
-	// standalone, captures frames to a GIF and exits.
-	RecordPath   string
-	RecordFPS    int
-	RecordScale  int
-	RecordFrames int
+	// Rec holds the shared --record flags; when its path is set the war map
+	// runs standalone, captures frames to a GIF and exits.
+	Rec record.Options
 }
