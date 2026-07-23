@@ -14,6 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"github.com/danielriddell21/crucible/record"
+	"github.com/danielriddell21/crucible/window"
 
 	"github.com/danielriddell21/hegemony/internal/sim"
 	"github.com/danielriddell21/hegemony/internal/strategy"
@@ -61,8 +62,7 @@ func runMap(cfg Config) error {
 		g.lastSent = g.shared() // suppress an initial publish; the child starts empty and fills in
 	}
 	w, h := g.Layout(0, 0)
-	ebiten.SetWindowSize(w, h)
-	ebiten.SetWindowTitle("hegemony — war map")
+	window.Configure(window.Options{Title: "hegemony — war map", Width: w, Height: h, MinWidth: w / 2, MinHeight: h / 2})
 	configureWindow(cfg)
 	if err := ebiten.RunGame(g); err != nil {
 		return fmt.Errorf("run war map: %w", err)
@@ -73,8 +73,7 @@ func runMap(cfg Config) error {
 func runBoard(cfg Config) error {
 	g := &boardGame{cfg: cfg, palette: palette(), link: cfg.Link}
 	w, h := g.Layout(0, 0)
-	ebiten.SetWindowSize(w, h)
-	ebiten.SetWindowTitle("hegemony — leaderboard")
+	window.Configure(window.Options{Title: "hegemony — leaderboard", Width: w, Height: h, MinWidth: w / 2, MinHeight: h / 2})
 	configureWindow(cfg)
 	if err := ebiten.RunGame(g); err != nil {
 		return fmt.Errorf("run leaderboard: %w", err)
