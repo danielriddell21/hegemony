@@ -1,5 +1,7 @@
 # hegemony
 
+> *n.* dominance of one power over the rest — here, argued out on a grid.
+
 [![CI](https://github.com/danielriddell21/hegemony/actions/workflows/ci.yaml/badge.svg)](https://github.com/danielriddell21/hegemony/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/danielriddell21/hegemony/branch/trunk/graph/badge.svg)](https://codecov.io/gh/danielriddell21/hegemony)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=danielriddell21_hegemony&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=danielriddell21_hegemony)
