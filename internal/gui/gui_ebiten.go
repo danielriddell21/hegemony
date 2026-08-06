@@ -10,7 +10,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/danielriddell21/crucible/canvas"
-	"github.com/danielriddell21/crucible/record"
 	"github.com/danielriddell21/crucible/window"
 
 	"github.com/danielriddell21/hegemony/internal/sim"
@@ -44,9 +43,6 @@ func runMap(cfg Config) error {
 		return err
 	}
 	g := &mapGame{cfg: cfg, world: world, palette: palette(), link: cfg.Link}
-	if cfg.Rec.Recording() {
-		g.rec = record.New(cfg.Rec)
-	}
 	if g.link != nil {
 		g.lastSent = g.shared() // suppress an initial publish; the child starts empty and fills in
 	}
@@ -103,17 +99,10 @@ type mapGame struct {
 	winner   sim.FactionID
 	link     *Link
 	lastSent Msg
-	rec      *record.Recorder
 	canvas   *canvas.Canvas
 }
 
 func (g *mapGame) Update() error {
-	if g.rec != nil && g.rec.Done() {
-		if err := g.rec.Save(g.cfg.Rec.Path); err != nil {
-			return fmt.Errorf("save recording: %w", err)
-		}
-		return ebiten.Termination
-	}
 	if !g.over {
 		g.acc += float64(g.cfg.TicksPerSecond) / float64(ebiten.TPS())
 		for g.acc >= 1 && !g.over {
@@ -192,11 +181,6 @@ func (g *mapGame) Draw(screen *ebiten.Image) {
 		Standings: g.link == nil, // no separate leaderboard window
 	}, g.palette)
 	screen.WritePixels(g.canvas.Pixels())
-
-	if g.rec != nil && !g.rec.Done() {
-		w, h := g.canvas.Size()
-		g.rec.Add(record.FromRGBA(g.canvas.Pixels(), w, h))
-	}
 }
 
 func (g *mapGame) Layout(_, _ int) (int, int) {

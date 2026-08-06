@@ -3,8 +3,6 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/danielriddell21/crucible/record"
-
 	"github.com/danielriddell21/hegemony/internal/gui"
 	"github.com/danielriddell21/hegemony/internal/strategy"
 )
@@ -19,7 +17,6 @@ func newRunCmd() *cobra.Command {
 		tps           int
 		child         int
 		strategies    []string
-		rec           record.Options
 	)
 
 	cmd := &cobra.Command{
@@ -43,10 +40,6 @@ func newRunCmd() *cobra.Command {
 			Strategies:     names,
 			CellSize:       cellSize,
 			TicksPerSecond: tps,
-			Rec:            rec,
-		}
-		if cfg.Rec.Recording() {
-			return runRecord(cfg)
 		}
 		if child > 0 {
 			return runChild(cfg, child)
@@ -64,6 +57,5 @@ func newRunCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&strategies, "strategies", nil, "strategies to enter (default: all registered)")
 	cmd.Flags().IntVar(&child, "child", 0, "internal: run as coordinated child window N")
 	_ = cmd.Flags().MarkHidden("child")
-	rec.AddFlags(cmd.Flags())
 	return cmd
 }
