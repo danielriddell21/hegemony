@@ -1,30 +1,48 @@
 # hegemony
 
-A territory-war simulation where competing algorithms fight to control a shared grid.
+> *hegemony* — rule by one, settled on a grid.
 
 [![CI](https://github.com/danielriddell21/hegemony/actions/workflows/ci.yaml/badge.svg)](https://github.com/danielriddell21/hegemony/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/danielriddell21/hegemony/branch/trunk/graph/badge.svg)](https://codecov.io/gh/danielriddell21/hegemony)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=danielriddell21_hegemony&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=danielriddell21_hegemony)
-[![Go](https://img.shields.io/github/go-mod/go-version/danielriddell21/hegemony)](go.mod)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=danielriddell21_hegemony&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=danielriddell21_hegemony)
+[![Go 1.26](https://img.shields.io/badge/go-1.26-blue)](https://go.dev)
+[![MIT License](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
+
+A territory-war simulation where competing algorithms fight to control a shared grid.
+
+## Commands
+
+| Command | Description |
+|---|---|
+| `hegemony headless` | Run a batch tournament across strategies and print a result table |
+| `hegemony run` | Watch a match in the GUI — war map and leaderboard in separate windows |
+| `hegemony evolve` | Search weights for the Evolved strategy and print the best vector |
 
 ## Install
 
-```sh
+### Homebrew
+```bash
+# headless CLI
+brew install danielriddell21/tap/hegemony
+
+# GUI
+brew install --cask danielriddell21/tap/hegemony
+```
+
+### Go install
+```bash
 go install github.com/danielriddell21/hegemony/cmd/hegemony@latest
 ```
 
-## Usage
-
-Run a headless tournament across the strategy roster:
-
-```sh
-hegemony headless --seeds 50 --width 24 --height 24
+### From source
+```bash
+git clone https://github.com/danielriddell21/hegemony
+cd hegemony
+just gui run
 ```
 
-Watch a match in the GUI — the war map and leaderboard open as separate,
-coordinated windows (built with `-tags ebiten`):
+A `go install` build is headless only — the GUI sits behind the `ebiten` build tag.
 
-```sh
-just gui run --width 32 --height 32
-```
+## Documentation
+
+Full documentation lives in the [hegemony wiki](https://github.com/danielriddell21/hegemony/wiki).
