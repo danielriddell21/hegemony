@@ -39,8 +39,6 @@ run *ARGS:
 # regenerate the documentation media
 [group('dev')]
 demos:
-    # Rendered headlessly through the software canvas: no window, no display,
-    # no ebiten build tag. A .mp4 path records video instead of a GIF.
-    mkdir -p docs/demos
-    go run ./cmd/hegemony run --record docs/demos/match.gif --record-frames 200 --seed 3
-    go run ./cmd/hegemony run --record docs/demos/duel.gif --record-frames 160 --seed 7 --strategies Blitzkrieg,Turtle,Bulwark
+    # One headless program renders every clip: no window, no display, no
+    # ebiten build tag. Give a clip an .mp4 extension to record video instead.
+    go run ./tools/demogen
