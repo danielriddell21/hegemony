@@ -3,7 +3,7 @@ module github.com/danielriddell21/hegemony
 go 1.26.3
 
 require (
-	github.com/danielriddell21/crucible v0.13.1-0.20260806195235-5ef8bbcc86e1
+	github.com/danielriddell21/crucible v0.15.1
 	github.com/danielriddell21/galapagos v0.2.0
 	github.com/hajimehoshi/ebiten/v2 v2.9.9
 	github.com/spf13/cobra v1.10.2
