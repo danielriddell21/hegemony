@@ -1,8 +1,8 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/danielriddell21/crucible v0.15.1 h1:HpJ+W/4iHgZwbj7uKF2D6/xc3KwDs4YmOT0IQuw94MU=
 github.com/danielriddell21/crucible v0.15.1/go.mod h1:zkFMgFhLCROS3nlwxK5exTI1KulRc+AuUj8ZY4SGkj4=
-github.com/danielriddell21/galapagos v0.2.0 h1:X+IwbnvbeK3hDjeLqxBueHWlRRF141/RevIVaQLkQIE=
-github.com/danielriddell21/galapagos v0.2.0/go.mod h1:7Yz3WdQ0NV1PgWw5yC5GYV3DC+IyWM0h4h+rRhuE2/o=
+github.com/danielriddell21/galapagos v0.5.0 h1:+BZQbughaIfi4zKXgNXvI7o+CIM6P9X143ZRG4uYnaI=
+github.com/danielriddell21/galapagos v0.5.0/go.mod h1:Rt94eDhho/vNt9+jBaSgSTEqn+GnZ/28sgve0mFWLGQ=
 github.com/danielriddell21/ordinex/v2 v2.0.1 h1:06R1COWpakgZI+GTsqGwgXcKaeXXuK1jlCLg9zkS0KI=
 github.com/danielriddell21/ordinex/v2 v2.0.1/go.mod h1:6iZREoGEq3nhCSvjUqgOOU7WKlASs9pu28gENi3GqmI=
 github.com/ebitengine/gomobile v0.0.0-20250923094054-ea854a63cce1 h1:+kz5iTT3L7uU+VhlMfTb8hHcxLO3TlaELlX8wa4XjA0=
@@ -26,8 +26,8 @@ github.com/spf13/pflag v1.0.10/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3A
 go.yaml.in/yaml/v3 v3.0.4/go.mod h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=
 golang.org/x/image v0.44.0 h1:+tDekMZED9+LrtB3G5xzRggpVh9CARjZqROla3R3R+I=
 golang.org/x/image v0.44.0/go.mod h1:V8K3KE9KKKE+pLpQDOeN18w9oacNSvy1tDOirTu4xtY=
-golang.org/x/sync v0.17.0 h1:l60nONMj9l5drqw6jlhIELNv9I0A4OFgRsG9k2oT9Ug=
-golang.org/x/sync v0.17.0/go.mod h1:9KTHXmSnoGruLpwFjVSX0lNNA75CykiMECbovNTZqGI=
+golang.org/x/sync v0.21.0 h1:HLII4xRRTtCRkxYp4HNFF0Js/Og6q2i++KXbg0gHCwM=
+golang.org/x/sync v0.21.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
 golang.org/x/sys v0.36.0 h1:KVRy2GtZBrk1cBYA7MKu5bEZFxQk4NIDV6RLVcC8o0k=
 golang.org/x/sys v0.36.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
