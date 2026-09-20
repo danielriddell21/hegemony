@@ -4,3 +4,4 @@
 coverage.txt
 coverage.html
 .DS_Store
+/dist/
